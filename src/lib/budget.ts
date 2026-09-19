@@ -10,7 +10,7 @@ export const BUDGET_PRESETS: readonly BudgetPreset[] = [
   { id: "200k", label: "200k", tokens: 200_000 },
 ] as const;
 
-export const DEFAULT_PRESET = BUDGET_PRESETS[0];
+export const DEFAULT_PRESET = BUDGET_PRESETS[2];
 
 export const MIN_CUSTOM_BUDGET = 256;
 export const MAX_CUSTOM_BUDGET = 2_000_000;
