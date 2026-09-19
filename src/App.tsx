@@ -14,6 +14,7 @@ import { BudgetCard } from "./components/BudgetCard";
 import { Composer } from "./components/Composer";
 import { Header } from "./components/Header";
 import { SisterStrip } from "./components/SisterStrip";
+import { HandoffBanner } from "./components/HandoffBanner";
 import { Toast } from "./components/Toast";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent } from "react";
@@ -165,7 +166,8 @@ export default function App() {
     <div className="page">
       <div className="ambient" aria-hidden="true" />
       <Header />
-      <SisterStrip current="context-budget" />
+      <SisterStrip current="context-budget" payload={raw} />
+      <HandoffBanner onPaste={(text) => { setRaw(text); setSampleId(null); }} />
       <main className="layout">
         <Composer
           raw={raw}
