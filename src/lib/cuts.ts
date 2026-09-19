@@ -11,6 +11,17 @@ function tokensFromChars(chars: number): number {
 const TURN_RE = /^(?:user|assistant|human|system|ai|tool|model)\s*[:\]>]/i;
 const EXAMPLE_RE = /^(?:example(?:\s+\d+)?|few[-\s]?shot|shot\s+\d+)\s*:/i;
 const STACK_RE = /^\s*(?:at\s+\S+|file\s+".+",\s+line\s+\d+|traceback\s*\(most recent)/i;
+const LOG_PATTERNS: RegExp[] = [
+  /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?/,
+  /^\[\d{2}:\d{2}(:\d{2})?(?:\.\d+)?\]/,
+  /^\d{2}:\d{2}:\d{2}(?:\.\d+)?\b/,
+  /^\[?(INFO|DEBUG|WARN|WARNING|ERROR|FATAL|TRACE|LOG)\]?(?:[:\s]|$)/i,
+  /^(INFO|DEBUG|WARN|WARNING|ERROR|FATAL|TRACE)\s+\S/,
+  /^npm (ERR!|WARN)/,
+  /^console\.(log|info|debug|warn|error)\b/,
+  /^(stdout|stderr)\s*\|/,
+];
+const LOG_MIN_LINES = 6;
 const URL_RE = /https?:\/\/[^\s)]+/gi;
 const BASE64_LINE_RE = /^(?:data:[^;]+;base64,)?[A-Za-z0-9+/]{80,}={0,2}$/;
 const BASE64_TOKEN_RE = /(?:data:[^;]+;base64,)?[A-Za-z0-9+/]{80,}={0,2}/g;
@@ -37,6 +48,44 @@ function cut(
 function splitLines(text: string): string[] {
   if (!text) return [];
   return text.split(/\r?\n/);
+}
+
+export function isLogLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  if (STACK_RE.test(trimmed)) return true;
+  return LOG_PATTERNS.some((pattern) => pattern.test(trimmed));
+}
+
+export function trailingLogRange(text: string): { startLine: number; logCount: number } | null {
+  const lines = splitLines(text);
+  if (lines.length === 0) return null;
+  let end = lines.length - 1;
+  while (end >= 0 && lines[end].trim() === "") end -= 1;
+  if (end < 0) return null;
+
+  let cursor = end;
+  let logCount = 0;
+  while (cursor >= 0) {
+    const line = lines[cursor];
+    if (line.trim() === "") {
+      cursor -= 1;
+      continue;
+    }
+    if (!isLogLine(line)) break;
+    logCount += 1;
+    cursor -= 1;
+  }
+  if (logCount < LOG_MIN_LINES) return null;
+
+  let startLine = cursor + 1;
+  while (startLine <= end && lines[startLine].trim() === "") startLine += 1;
+
+  const keepFloor = Math.max(8, Math.floor(lines.length * 0.15));
+  if (startLine === 0 && lines.length > keepFloor) {
+    startLine = lines.length - keepFloor;
+  }
+  return { startLine, logCount };
 }
 
 function dupLines(text: string): Cut | null {
@@ -266,6 +315,20 @@ function stackTrace(text: string): Cut | null {
   );
 }
 
+function trailingLogs(text: string): Cut | null {
+  const range = trailingLogRange(text);
+  if (!range) return null;
+  const lines = splitLines(text);
+  const body = lines.slice(range.startLine).join("\n");
+  return cut(
+    "trailing-logs",
+    "Trailing logs",
+    tokensFromChars(body.length),
+    `${range.logCount} log-looking lines at the end.`,
+    "Drop the suffix (build output, stack traces, timestamps). Keep the prose above.",
+  );
+}
+
 function blankRuns(text: string): Cut | null {
   const matches = text.match(/\n{4,}/g) ?? [];
   if (!matches.length) return null;
@@ -294,6 +357,7 @@ export function findCuts(text: string): Cut[] {
   push(boilerplate(text));
   push(urlDump(text));
   push(stackTrace(text));
+  push(trailingLogs(text));
   push(blankRuns(text));
 
   const fences = fenceCuts(text);

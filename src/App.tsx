@@ -6,7 +6,7 @@ import {
   presetById,
 } from "./lib/budget";
 import { copyText, downloadBlob, cardToPngBlob } from "./lib/exportImage";
-import { formatCompactStats, formatShareText } from "./lib/share";
+import { downloadText, formatCompactStats, formatShareText } from "./lib/share";
 import { slugify } from "./lib/tokens";
 import type { PresetId } from "./types";
 import { Actions } from "./components/Actions";
@@ -16,6 +16,7 @@ import { Header } from "./components/Header";
 import { SisterStrip } from "./components/SisterStrip";
 import { HandoffBanner } from "./components/HandoffBanner";
 import { Toast } from "./components/Toast";
+import { TrimPreview } from "./components/TrimPreview";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent } from "react";
 
@@ -25,8 +26,9 @@ export default function App() {
   const [presetId, setPresetId] = useState<PresetId>(DEFAULT_PRESET.id);
   const [customRaw, setCustomRaw] = useState("64k");
   const [toast, setToast] = useState<string | null>(null);
-  const [busy, setBusy] = useState<"png" | "share" | null>(null);
+  const [busy, setBusy] = useState<"png" | "share" | "copy-md" | "download-md" | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [showTrim, setShowTrim] = useState(true);
   const frameRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -160,6 +162,32 @@ export default function App() {
     }
   }, [report, showToast]);
 
+  const copyTrimmed = useCallback(async () => {
+    if (!report.trimmed) return;
+    setBusy("copy-md");
+    try {
+      await copyText(report.trimmed);
+      showToast("Trimmed draft copied.");
+    } catch {
+      showToast("Could not copy trimmed draft.");
+    } finally {
+      setBusy(null);
+    }
+  }, [report.trimmed, showToast]);
+
+  const downloadTrimmed = useCallback(() => {
+    if (!report.trimmed) return;
+    setBusy("download-md");
+    try {
+      downloadText(report.trimmed, `context-budget-trimmed-${slugify(report.budgetLabel)}.txt`);
+      showToast("Trimmed draft downloaded.");
+    } catch {
+      showToast("Download failed.");
+    } finally {
+      setBusy(null);
+    }
+  }, [report.budgetLabel, report.trimmed, showToast]);
+
   const live = report.empty ? "Waiting for a paste" : formatCompactStats(report);
 
   return (
@@ -211,11 +239,22 @@ export default function App() {
           <p className="stage-stats">{report.empty ? null : formatCompactStats(report)}</p>
           <Actions
             disabled={report.empty}
+            trimDisabled={!report.trimmed}
             busy={busy}
             onDownloadPng={() => void downloadPng()}
             onCopyShare={() => void copyShare()}
+            onCopyTrimmed={() => void copyTrimmed()}
+            onDownloadTrimmed={downloadTrimmed}
             onReset={reset}
           />
+          {report.trimmed && report.trimmedTokens != null ? (
+            <TrimPreview
+              text={report.trimmed}
+              tokens={report.trimmedTokens}
+              open={showTrim}
+              onToggle={setShowTrim}
+            />
+          ) : null}
         </section>
       </main>
       <footer className="site-foot">

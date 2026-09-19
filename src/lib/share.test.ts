@@ -7,12 +7,12 @@ import { formatCompactStats, formatShareText, formatStampTime } from "./share.ts
 describe("formatCompactStats", () => {
   it("prints tokens, percent, and headroom", () => {
     const report = analyzeContext("a".repeat(8000), 8_000, "8k");
-    assert.equal(formatCompactStats(report), "~2,000 tok · 25% of 8k · ~6,000 headroom");
+    assert.equal(formatCompactStats(report), "~2,000 tok · 25% of 8k · 8,000 chars · 1 words · ~6,000 headroom");
   });
 
   it("prints over-budget as a deficit", () => {
     const report = analyzeContext("a".repeat(40_000), 8_000, "8k");
-    assert.equal(formatCompactStats(report), "~10,000 tok · 125% of 8k · over by ~2,000");
+    assert.equal(formatCompactStats(report), "~10,000 tok · 125% of 8k · 40,000 chars · 1 words · over by ~2,000");
   });
 });
 

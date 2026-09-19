@@ -2,10 +2,10 @@ Capture shots from the running app. Screenshots are optional; the card is the pr
 
 | Query | What |
 | --- | --- |
-| `?sample=tight-brief` | GREEN brief |
-| `?sample=few-shot-echo` | YELLOW few-shot pile |
-| `?sample=session-dump` | RED chat + JSON |
-| `?sample=payload-dump` | RED base64 + license |
+| `?sample=tight-brief` | GREEN brief (clean short) |
+| `?sample=few-shot-echo` | YELLOW bloated system / few-shot pile |
+| `?sample=session-dump` | RED long transcript + trailing logs |
+| `?sample=payload-dump` | RED README dump |
 | `?budget=32k` | Start on the 32k preset |
 | `?shot=card` | Card only |
 | `?shot=og` | Cropped compositor for an OG image |

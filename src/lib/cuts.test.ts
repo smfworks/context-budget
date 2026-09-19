@@ -56,6 +56,15 @@ describe("findCuts", () => {
     assert.ok(ids(shots).includes("few-shot"));
   });
 
+  it("flags trailing log suffixes", () => {
+    const prose = "Ship the card. Approximate tokenizer.\n";
+    const logs = Array.from(
+      { length: 8 },
+      (_, i) => `2026-09-17 12:0${i % 10}:00 DEBUG agent: line=${i} npm run build`,
+    ).join("\n");
+    assert.ok(ids(`${prose}\n${logs}\n`).includes("trailing-logs"));
+  });
+
   it("flags license boilerplate", () => {
     const license = `MIT License
 
@@ -94,6 +103,7 @@ copies of the Software.`;
     const sessionIds = ids(session.text);
     assert.ok(sessionIds.includes("chat-log"), sessionIds.join(","));
     assert.ok(sessionIds.includes("json-blob"), sessionIds.join(","));
+    assert.ok(sessionIds.includes("trailing-logs"), sessionIds.join(","));
     const payloadIds = ids(payload.text);
     assert.ok(payloadIds.includes("base64"), payloadIds.join(","));
     assert.ok(payloadIds.includes("boilerplate"), payloadIds.join(","));

@@ -19,7 +19,7 @@ export function formatCompactStats(report: BudgetReport): string {
     report.headroom < 0
       ? `over by ~${formatCount(Math.abs(report.headroom))}`
       : `~${formatCount(report.headroom)} headroom`;
-  return `~${formatCount(report.tokens)} tok · ${formatPct(report.pct)} of ${report.budgetLabel} · ${head}`;
+  return `~${formatCount(report.tokens)} tok · ${formatPct(report.pct)} of ${report.budgetLabel} · ${formatCount(report.chars)} chars · ${formatCount(report.words)} words · ${head}`;
 }
 
 export function formatShareText(report: BudgetReport): string {
@@ -42,6 +42,25 @@ export function formatShareText(report: BudgetReport): string {
     }
   }
 
+  if (report.trimmed && report.trimmedTokens != null) {
+    lines.push(
+      "",
+      `Conservative trim available · ~${formatCount(report.trimmedTokens)} tok (was ~${formatCount(report.tokens)}).`,
+    );
+  }
+
   lines.push("", "Approximate · not a billing meter", "Context Budget · SMF Works", SHARE_URL);
   return lines.join("\n");
+}
+
+export function downloadText(text: string, filename: string): void {
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }

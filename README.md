@@ -42,10 +42,10 @@ Node 20+ (22 recommended). Client-side only — no auth, no backend, no API keys
 
 ## Use it
 
-1. Pick **Tight brief** (GREEN), **Few-shot echo** (YELLOW), **Session dump** (RED), or **Payload dump** (RED), or paste / drop a `.txt` / `.md` / `.json`.
+1. Pick **Clean short** (GREEN), **Bloated system** (YELLOW), **Long transcript** (RED), or **README dump** (RED), or paste / drop a `.txt` / `.md` / `.json`.
 2. Choose a budget: **8k / 32k / 128k / 200k**, or **Custom** (`64k`, `50000`, …).
-3. The card updates live — `~tokens`, `%` of budget, headroom, and a cut list.
-4. **Download PNG** or **Copy share text**. **Reset** clears the compositor.
+3. The card updates live — `~tokens`, `%` of budget, chars / words, headroom, and a cut list.
+4. **Download PNG** or **Copy share text**. Optionally **Copy trimmed draft** / **Download trimmed .txt** for a conservative cut. **Reset** clears the compositor.
 
 Useful query params: `?sample=few-shot-echo`, `?sample=session-dump`, `?budget=32k`, `?shot=card`, `?shot=og`.
 
@@ -53,10 +53,10 @@ Useful query params: `?sample=few-shot-echo`, `?sample=session-dump`, `?budget=3
 
 | Id | What it shows |
 | --- | --- |
-| `tight-brief` | Bounded ops prompt · GREEN on 8k · nothing obvious to cut |
-| `few-shot-echo` | The same example, copied · YELLOW on 8k |
-| `session-dump` | Chat transcript + JSON payload · RED on 8k |
-| `payload-dump` | License + base64 + URL dump · RED on 8k |
+| `tight-brief` | Clean short ops prompt · GREEN on 8k · nothing obvious to cut |
+| `few-shot-echo` | Bloated system prompt (repeated examples) · YELLOW on 8k |
+| `session-dump` | Long transcript + JSON + trailing logs · RED on 8k |
+| `payload-dump` | README dump (license + fences + blobs) · RED on 8k |
 
 ## How tokens are counted
 
@@ -82,6 +82,7 @@ Pattern matching in [`src/lib/cuts.ts`](src/lib/cuts.ts). It will be wrong. That
 | `chat-log` | User / Assistant transcripts |
 | `json-blob` | Large JSON documents or fences |
 | `code-fence` | Oversized fenced code |
+| `trailing-logs` | Timestamped / INFO / npm / stack suffix |
 | `base64` | High-entropy / data-URL blobs |
 | `boilerplate` | License / copyright walls |
 | `url-dump` | A pile of inline URLs |
@@ -89,6 +90,8 @@ Pattern matching in [`src/lib/cuts.ts`](src/lib/cuts.ts). It will be wrong. That
 | `blank-runs` | Long empty stretches |
 
 Savings on the card are also chars ÷ 4. Overlapping hits can double-count. Cut with judgment.
+
+The **conservative trimmed draft** applies only mechanical edits (collapse consecutive copies, stub giant fences, truncate trailing logs, keep recent turns). It is a draft, not a rewrite of your judgment.
 
 ## Host a demo
 

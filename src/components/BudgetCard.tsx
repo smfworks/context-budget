@@ -65,6 +65,10 @@ export function BudgetCard({ report }: BudgetCardProps) {
               <dt>Headroom</dt>
               <dd>{report.empty ? "—" : head}</dd>
             </div>
+            <div>
+              <dt>Chars / words</dt>
+              <dd>{report.empty ? "—" : `${formatCount(report.chars)} / ${formatCount(report.words)}`}</dd>
+            </div>
           </dl>
         </div>
 

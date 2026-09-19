@@ -2,12 +2,21 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   budgetIdFromSource,
+  countWords,
   estimateTokens,
   formatCount,
   formatPct,
   formatTokensCompact,
   slugify,
 } from "./tokens.ts";
+
+describe("countWords", () => {
+  it("counts whitespace-separated tokens", () => {
+    assert.equal(countWords(""), 0);
+    assert.equal(countWords("  paste   less  "), 2);
+    assert.equal(countWords("one\ntwo\nthree"), 3);
+  });
+});
 
 describe("estimateTokens", () => {
   it("is chars / 4, rounded", () => {
