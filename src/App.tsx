@@ -166,8 +166,8 @@ export default function App() {
     <div className="page">
       <div className="ambient" aria-hidden="true" />
       <Header />
-      <SisterStrip current="context-budget" payload={raw} />
-      <HandoffBanner onPaste={(text) => { setRaw(text); setSampleId(null); }} />
+      <SisterStrip current="context-budget" payload={raw} kind="plain" />
+      <HandoffBanner accept={["plain", "redacted-text", "skill-md", "session-json"]} onPaste={(text) => { setRaw(text); setSampleId(null); }} />
       <main className="layout">
         <Composer
           raw={raw}
