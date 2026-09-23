@@ -1,7 +1,7 @@
 import type { DragEvent } from "react";
 import { PASTE_PLACEHOLDER, SAMPLES } from "../data/samples";
 import { BUDGET_PRESETS } from "../lib/budget";
-import { formatCount } from "../lib/tokens";
+import { countWords, formatCount } from "../lib/tokens";
 import type { PresetId } from "../types";
 
 interface ComposerProps {
@@ -127,7 +127,11 @@ export function Composer({
         <button type="button" className="text-btn" onClick={onPickFile}>
           Upload a file
         </button>
-        <span>{raw.trim() ? `${formatCount(raw.length)} chars` : "Client-side only · no API"}</span>
+        <span>
+          {raw.trim()
+            ? `${formatCount(raw.length)} chars · ${formatCount(countWords(raw))} words`
+            : "Client-side only · no API"}
+        </span>
       </div>
       <p className="live-line">{liveLine}</p>
       <p className="disclaimer">

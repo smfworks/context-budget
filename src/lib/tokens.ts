@@ -4,6 +4,11 @@ export function estimateTokens(text: string): number {
   return Math.round(text.length / 4);
 }
 
+export function countWords(text: string): number {
+  const parts = text.trim().match(/\S+/g);
+  return parts ? parts.length : 0;
+}
+
 export function formatCount(n: number): string {
   const sign = n < 0 ? "−" : "";
   const abs = Math.abs(Math.round(n));

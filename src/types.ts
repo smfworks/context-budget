@@ -24,6 +24,7 @@ export interface BudgetReport {
   id: string;
   empty: boolean;
   chars: number;
+  words: number;
   tokens: number;
   budgetTokens: number;
   budgetLabel: string;
@@ -32,6 +33,8 @@ export interface BudgetReport {
   band: Band;
   cuts: Cut[];
   cutTokens: number;
+  trimmed: string | null;
+  trimmedTokens: number | null;
   heuristic: true;
   measuredAt: string;
   summary: string;

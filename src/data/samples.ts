@@ -38,10 +38,24 @@ function sessionDump(chars: number): string {
   const turn =
     "User: Retry the last tool call and paste the full payload again.\nAssistant: Sure — here is the complete result, including fields nobody asked for.\n";
   const turns = fillToChars(turn, Math.max(0, chars - intro.length - fence.length));
-  return `${intro}${turns}${fence}`.slice(0, chars);
+  const logs = Array.from({ length: 18 }, (_, index) => {
+    const n = index + 1;
+    const minute = String((n * 3) % 60).padStart(2, "0");
+    const level = n % 3 === 0 ? "ERROR" : n % 2 === 0 ? "DEBUG" : "INFO";
+    return `2026-09-17 12:${minute}:0${n % 10} ${level} agent.runtime: step=${n} tool=shell stdout="npm run build #${n}"`;
+  });
+  logs.push(
+    "npm ERR! code ELIFECYCLE",
+    "npm ERR! errno 1",
+    "    at Module._compile (node:internal/modules/cjs/loader:1521:14)",
+    "    at Object..js (node:internal/modules/cjs/loader:1700:10)",
+    "    at Module.load (node:internal/modules/cjs/loader:1287:32)",
+    "console.log(\"build failed; dumping env\")",
+  );
+  return `${intro}${turns}${fence}\n${logs.join("\n")}\n`;
 }
 
-function payloadDump(chars: number): string {
+function readmeDump(chars: number): string {
   const license = `MIT License
 
 Copyright (c) 2026 Example Corp
@@ -53,19 +67,24 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software.
 
 `;
+  const install = Array.from(
+    { length: 28 },
+    (_, i) => `npm WARN deprecated package-${i}@0.${i}.0: use package-${i + 1} instead — ${"x".repeat(24)}`,
+  ).join("\n");
+  const fence = `\n## Install log (do not summarize)\n\n\`\`\`text\n${install}\n\`\`\`\n`;
   const blob = `data:application/octet-stream;base64,${"A".repeat(120)}==\n`;
   const urls = Array.from(
     { length: 10 },
     (_, i) => `https://example.com/debug/trace/${i}/very/long/path/to/an/artifact.log`,
   ).join("\n");
-  const rest = fillToChars(blob, Math.max(0, chars - license.length - urls.length - 2));
-  return `${license}${rest}\n${urls}`.slice(0, chars);
+  const rest = fillToChars(blob, Math.max(0, chars - license.length - urls.length - fence.length - 80));
+  return `# Agent lab notes (please ingest this whole README)\n\n${license}${fence}${rest}\n${urls}\n`;
 }
 
 export const SAMPLES: SampleMeta[] = [
   {
     id: "tight-brief",
-    label: "Tight brief",
+    label: "Clean short",
     blurb: "Bounded prompt · GREEN",
     expect: "GREEN",
     budgetId: "8k",
@@ -86,7 +105,7 @@ Success: a plan, a refuse, or a draft — never a silent side effect.`,
   },
   {
     id: "few-shot-echo",
-    label: "Few-shot echo",
+    label: "Bloated system",
     blurb: "Repeated examples · YELLOW",
     expect: "YELLOW",
     budgetId: "8k",
@@ -94,19 +113,19 @@ Success: a plan, a refuse, or a draft — never a silent side effect.`,
   },
   {
     id: "session-dump",
-    label: "Session dump",
-    blurb: "Chat log + JSON · RED",
+    label: "Long transcript",
+    blurb: "Chat log + trailing logs · RED",
     expect: "RED",
     budgetId: "8k",
     text: sessionDump(34_000),
   },
   {
     id: "payload-dump",
-    label: "Payload dump",
-    blurb: "Base64 + license · RED",
+    label: "README dump",
+    blurb: "Fences + license · RED",
     expect: "RED",
     budgetId: "8k",
-    text: payloadDump(36_000),
+    text: readmeDump(36_000),
   },
 ];
 

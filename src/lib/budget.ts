@@ -1,7 +1,8 @@
 import type { Band, BudgetPreset, BudgetReport, PresetId } from "../types.ts";
 import { SCHEMA_VERSION } from "../types.ts";
 import { findCuts } from "./cuts.ts";
-import { budgetIdFromSource, estimateTokens, formatCount, formatPct, formatTokensCompact } from "./tokens.ts";
+import { conservativeTrim } from "./trim.ts";
+import { budgetIdFromSource, countWords, estimateTokens, formatCount, formatPct, formatTokensCompact } from "./tokens.ts";
 
 export const BUDGET_PRESETS: readonly BudgetPreset[] = [
   { id: "8k", label: "8k", tokens: 8_000 },
@@ -56,6 +57,7 @@ export function analyzeContext(
 ): BudgetReport {
   const empty = text.trim().length === 0;
   const chars = empty ? 0 : text.length;
+  const words = empty ? 0 : countWords(text);
   const tokens = empty ? 0 : estimateTokens(text);
   const safeBudget = Math.max(1, Math.round(budgetTokens));
   const pct = (tokens / safeBudget) * 100;
@@ -63,6 +65,8 @@ export function analyzeContext(
   const band = bandFromPct(pct);
   const cuts = empty ? [] : findCuts(text);
   const cutTokens = cuts.reduce((sum, cut) => sum + cut.tokens, 0);
+  const trimmed = empty ? null : conservativeTrim(text);
+  const trimmedTokens = trimmed ? estimateTokens(trimmed) : null;
   const budgetLabel = formatBudgetLabel(safeBudget, presetId);
   const id = empty
     ? "CB-————"
@@ -86,6 +90,7 @@ export function analyzeContext(
     id,
     empty,
     chars,
+    words,
     tokens,
     budgetTokens: safeBudget,
     budgetLabel,
@@ -94,6 +99,8 @@ export function analyzeContext(
     band,
     cuts,
     cutTokens,
+    trimmed,
+    trimmedTokens,
     heuristic: true,
     measuredAt: at.toISOString(),
     summary,

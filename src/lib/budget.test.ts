@@ -45,6 +45,8 @@ describe("analyzeContext", () => {
     const text = "a".repeat(8000);
     const report = analyzeContext(text, 8_000, "8k", new Date("2026-09-17T22:00:00Z"));
     assert.equal(report.tokens, 2000);
+    assert.equal(report.chars, 8000);
+    assert.equal(report.words, 1);
     assert.equal(report.pct, 25);
     assert.equal(report.headroom, 6000);
     assert.equal(report.band, "GREEN");
@@ -67,8 +69,10 @@ describe("analyzeContext", () => {
     const report = analyzeContext("   ", 8_000, "8k");
     assert.equal(report.empty, true);
     assert.equal(report.tokens, 0);
+    assert.equal(report.words, 0);
     assert.equal(report.pct, 0);
     assert.equal(report.cuts.length, 0);
+    assert.equal(report.trimmed, null);
   });
 
   it("ships the four public budgets", () => {
@@ -92,6 +96,14 @@ describe("samples", () => {
       assert.equal(report.empty, false);
       assert.equal(estimateTokens(sample.text), report.tokens);
     }
+  });
+
+  it("ships a conservative trim on noisy samples", () => {
+    const sample = SAMPLES.find((item) => item.id === "session-dump");
+    assert.ok(sample);
+    const report = analyzeContext(sample.text, 8_000, "8k");
+    assert.ok(report.trimmed);
+    assert.ok(report.trimmedTokens != null && report.trimmedTokens < report.tokens);
   });
 
   it("exposes four samples by id", () => {
